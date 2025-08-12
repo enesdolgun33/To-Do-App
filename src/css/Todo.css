@@ -1,0 +1,20 @@
+.todo-div {
+    margin-top: 10px;
+    display: flex;
+    flex-direction: row;
+    align-items:center;
+    justify-content: space-between;
+    border: 1px solid lightgrey;
+    padding: 16px;
+    border-radius: 5px;
+    background-color:#06a7e1be;
+
+}
+
+.icons {
+    font-size: 25px;
+    margin-left: 5px;
+    cursor: pointer;
+    color:white;
+    
+}
