@@ -1,69 +1,82 @@
-# React + TypeScript + Vite
+# To-Do App (React + TypeScript + Redux Toolkit)
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+Bu proje, **Vite** ile oluşturulmuş, **React** ve **TypeScript** tabanlı bir To-Do (Yapılacaklar Listesi) uygulamasıdır. Uygulamanın state yönetimi için **Redux Toolkit** kullanılmıştır.
 
-Currently, two official plugins are available:
+## Teknoloji Mimarisi
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Babel](https://babeljs.io/) for Fast Refresh
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/) for Fast Refresh
+* **UI Kütüphanesi:** React
+* **Geliştirme Ortamı:** Vite
+* **Dil:** TypeScript
+* **State Management:** Redux Toolkit (`@reduxjs/toolkit`, `react-redux`)
+* **Ikonlar:** React Icons (`react-icons`)
+* **Styling:** Standart CSS (`App.css`, `src/css/Todo.css`)
 
-## Expanding the ESLint configuration
+## Özellikler (Features)
 
-If you are developing a production application, we recommend updating the configuration to enable type-aware lint rules:
+Uygulama, temel CRUD (Create, Read, Update, Delete) operasyonlarını desteklemektedir:
 
-```js
-export default tseslint.config([
-  globalIgnores(['dist']),
-  {
-    files: ['**/*.{ts,tsx}'],
-    extends: [
-      // Other configs...
+* **Todo Ekleme (Create):** Kullanıcılar bir input alanına yeni bir görev girip listeye ekleyebilir.
+* **Todo Listeleme (Read):** Eklenen tüm görevler liste halinde görüntülenir.
+* **Todo Güncelleme (Update):** Her bir görev, "düzenle" butonuna tıklandığında inline olarak (yerinde) güncellenebilir.
+* **Todo Silme (Delete):** Her bir görev, "sil" butonu ile listeden kaldırılabilir.
 
-      // Remove tseslint.configs.recommended and replace with this
-      ...tseslint.configs.recommendedTypeChecked,
-      // Alternatively, use this for stricter rules
-      ...tseslint.configs.strictTypeChecked,
-      // Optionally, add this for stylistic rules
-      ...tseslint.configs.stylisticTypeChecked,
+## Proje Yapısı ve State Yönetimi
 
-      // Other configs...
-    ],
-    languageOptions: {
-      parserOptions: {
-        project: ['./tsconfig.node.json', './tsconfig.app.json'],
-        tsconfigRootDir: import.meta.dirname,
-      },
-      // other options...
-    },
-  },
-])
-```
+Proje, state yönetimi için Redux Toolkit'in "slice" yapısını kullanır. Component'ler ve Redux arasındaki akış şu şekildedir:
 
-You can also install [eslint-plugin-react-x](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-x) and [eslint-plugin-react-dom](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-dom) for React-specific lint rules:
+### 1. Redux Store ve Slice
 
-```js
-// eslint.config.js
-import reactX from 'eslint-plugin-react-x'
-import reactDom from 'eslint-plugin-react-dom'
+* `src/redux/store.tsx`:
+    * `configureStore` kullanılarak Redux store'u oluşturulur.
+    * `todoSlice`'tan gelen `todoReducer` burada ana reducer olarak bağlanır.
 
-export default tseslint.config([
-  globalIgnores(['dist']),
-  {
-    files: ['**/*.{ts,tsx}'],
-    extends: [
-      // Other configs...
-      // Enable lint rules for React
-      reactX.configs['recommended-typescript'],
-      // Enable lint rules for React DOM
-      reactDom.configs.recommended,
-    ],
-    languageOptions: {
-      parserOptions: {
-        project: ['./tsconfig.node.json', './tsconfig.app.json'],
-        tsconfigRootDir: import.meta.dirname,
-      },
-      // other options...
-    },
-  },
-])
-```
+* `src/redux/todoSlice.tsx`:
+    * Uygulamanın ana state mantığı burada yer alır. `createSlice` ile bir "dilim" oluşturulur.
+    * **Initial State:** `todos: []` (boş bir todo dizisi) olarak tanımlanmıştır.
+    * **Reducers:**
+        * `createTodo`: State'e yeni bir todo objesi (`action.payload`) ekler.
+        * `removeTodoById`: `id`'si `action.payload` ile eşleşen todo'yu listeden filtreler.
+        * `updateTodo`: `id`'si eşleşen todo'yu `action.payload`'daki yeni obje ile değiştirir.
+
+### 2. Component Mimarisi
+
+* `src/main.tsx`:
+    * Uygulamanın giriş noktasıdır.
+    * Redux `Provider`'ı ile tüm `App` component'ini sararak state'in global olarak erişilebilir olmasını sağlar.
+
+* `src/App.tsx`:
+    * Ana layout component'idir.
+    * `<TodoCreate />` (yeni todo ekleme formu) ve `<TodoList />` (todo listesi) component'lerini render eder.
+
+* `src/components/TodoCreate.tsx`:
+    * Yeni todo metni için bir `useState` (`newTodo`) tutar.
+    * `useDispatch` hook'u ile Redux'a bağlanır.
+    * "Oluştur" butonuna tıklandığında, (boş kontrolü yaptıktan sonra) rastgele bir `id` ve `newTodo` içeriği ile bir `payload` oluşturur ve `createTodo` action'ını dispatch eder.
+
+* `src/components/TodoList.tsx`:
+    * `useSelector` hook'u ile Redux state'indeki `todos` dizisine abone olur.
+    * `todos` dizisi üzerinde `map` işlemi yaparak her bir todo item'ı için bir `<Todo />` component'i render eder.
+
+* `src/components/Todo.tsx`:
+    * Tek bir todo item'ının gösterilmesinden ve yönetilmesinden sorumludur.
+    * `todoProps` ile todo objesini alır.
+    * `useDispatch` hook'unu kullanır.
+    * "Edit" (düzenleme) modu için `editable` adında lokal bir `useState` tutar.
+    * `CiCircleRemove` (Sil) ikonuna tıklandığında `removeTodoById` action'ını dispatch eder.
+    * `CiEdit` (Düzenle) ikonuna tıklandığında `editable` state'ini `true` yapar ve input gösterir.
+    * `FaCheck` (Onayla) ikonuna tıklandığında `updateTodo` action'ını yeni içerikle dispatch eder ve "edit" modundan çıkar.
+
+## Kurulum ve Çalıştırma
+
+1.  Gerekli paketleri yükleyin:
+    ```bash
+    npm install
+    ```
+2.  Projeyi geliştirme modunda başlatın:
+    ```bash
+    npm run dev
+    ```
+3.  Production build'u almak için:
+    ```bash
+    npm run build
+    ```
